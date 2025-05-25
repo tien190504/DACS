@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Financial Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+      body { background: #181d23; color: #fff; }
+      .container-fluid { padding: 20px; }
+      .card { background: #23272e; color: #fff; }
+      .form-control, .form-select { background: #23272e; color: #fff; }
+    </style>
+</head>
+<body>
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container" style="height:500px; width:100%;">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright">
+    <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+      <span class="blue-text">Track all markets on TradingView</span>
+    </a>
+  </div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+  {
+    "width": "100%",
+    "height": 500,
+    "symbol": "SP:SPY",
+    "interval": "D",
+    "timezone": "Etc/UTC",
+    "theme": "dark",
+    "style": "1",
+    "locale": "en",
+    "allow_symbol_change": true,
+    "support_host": "https://www.tradingview.com"
+  }
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+<div class="container-fluid">
+    <h3 class="mb-4">Financial Analysis Dashboard</h3>
+    <div class="row">
+        <!-- Chart area -->
+        <div class="col-12 mb-4">
+            <div class="card p-3">
+                <div id="price-chart"></div>
+                <div id="rsi-chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <!-- Indicator select & Prompt -->
+        <div class="col-md-4">
+            <div class="card p-3 mb-4">
+                <label>Select Indicator:</label>
+                <select class="form-select mb-3" id="indicator-select">
+                    <option value="rsi">RSI</option>
+                </select>
+                <label>Prompt Text:</label>
+                <textarea class="form-control mb-2" id="prompt-text" rows="3"></textarea>
+                <button class="btn btn-primary w-100" onclick="runPrompt()">Submit Prompt</button>
+            </div>
+        </div>
+        <!-- Market data -->
+        <div class="col-md-4">
+            <div class="card p-3 mb-4" id="market-data">
+                <h5>Market Data</h5>
+                <div id="market-symbol"></div>
+                <div id="market-price"></div>
+                <div id="market-performance"></div>
+            </div>
+        </div>
+        <!-- AI Response -->
+        <div class="col-md-4">
+            <div class="card p-3 mb-4">
+                <h5>AI Analysis Result</h5>
+                <div id="ai-result" style="white-space: pre-line;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- Fetch & plot chart ---
+function fetchPriceChart() {
+    fetch('/api/price?symbol=^GSPC') // Đổi XAUUSD=X thành ^GSPC
+      .then(res => res.json())
+      .then(data => {
+        let x = data.map(pt => pt.time);
+        let y = data.map(pt => pt.Close);
+        Plotly.newPlot('price-chart', [{
+            x: x, y: y, type: 'scatter', name: 'Close', line: {color: '#46bc99'}
+        }], { title: 'S&P 500 Close Price', plot_bgcolor: "#181d23", paper_bgcolor: "#23272e", font: {color: "#fff"} });
+      });
+}
+
+function fetchRSIChart() {
+    fetch('/api/indicator?symbol=^GSPC&indicator=rsi') // Đổi XAUUSD=X thành ^GSPC
+      .then(res => res.json())
+      .then(data => {
+        Plotly.newPlot('rsi-chart', [{
+            x: data.time, y: data.rsi, type: 'scatter', name: 'RSI', line: {color: '#e99343'}
+        }], { title: 'RSI 14', plot_bgcolor: "#181d23", paper_bgcolor: "#23272e", font: {color: "#fff"}, yaxis: {range: [0, 100]} });
+      });
+}
+
+// --- Market Data ---
+function fetchMarketData() {
+    fetch('/api/marketdata?symbol=^GSPC') // Đổi XAUUSD=X thành ^GSPC
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('market-symbol').innerHTML = `<b>Symbol:</b> ${data.symbol}`;
+        document.getElementById('market-price').innerHTML = `<b>Price:</b> ${data.price} ${data.currency}`;
+        document.getElementById('market-performance').innerHTML = `<b>Performance 1Y:</b> ${Math.round(data.performance['1y']*10000)/100}%`;
+      });
+}
+
+
+</script>
+</body>
+</html>
