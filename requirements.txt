@@ -18,5 +18,6 @@ kagglehub
 pandas_ta
 optuna
 utils
-models
 flask
+flask_restful
+flask_cors

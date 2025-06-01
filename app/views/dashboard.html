@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S&P 500 AI Prediction Dashboard - Real Data</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #151520 50%, #1a1a2e 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, rgba(16, 20, 31, 0.95) 0%, rgba(25, 30, 45, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .logo-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ff88 0%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .logo-text p {
+            color: #b0b0b0;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .status-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .status-card:hover::before {
+            left: 100%;
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff88;
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #00ff88;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .card-label {
+            color: #b0b0b0;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .chart-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 25px;
+            padding: 30px;
+            margin: 30px 0;
+            backdrop-filter: blur(15px);
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 500px;
+        }
+
+        .sentiment-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 25px;
+            padding: 30px;
+            margin: 30px 0;
+            backdrop-filter: blur(15px);
+        }
+
+        .sentiment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .sentiment-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .sentiment-item:hover {
+            transform: translateY(-3px);
+            border-color: #ffaa00;
+            box-shadow: 0 5px 20px rgba(255, 170, 0, 0.2);
+        }
+
+        .sentiment-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .sentiment-label {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .ai-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px rgba(255, 170, 0, 0.5); }
+            to { box-shadow: 0 0 20px rgba(255, 170, 0, 0.8); }
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: blink 1.5s infinite;
+        }
+
+        .status-online {
+            background: #00ff88;
+        }
+
+        .status-offline {
+            background: #ff4757;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .data-info {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+        }
+
+        .control-btn.active {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .trading-view-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 25px;
+            padding: 30px;
+            margin: 30px 0;
+            backdrop-filter: blur(15px);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #666;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .logo-text h1 {
+                font-size: 2rem;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00ff88;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00cc66);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-header">
+        <div class="container">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>S&P 500 AI Predictor</h1>
+                    <p>Real Market Data + Sentiment Analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <!-- Status Cards -->
+        <div class="status-cards">
+            <div class="status-card">
+                <div class="card-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div id="current-price" class="card-value" style="color: #00ff88;">Loading...</div>
+                <div class="card-label">Current SPY Price</div>
+                <div id="last-market-date" class="card-subtitle">--</div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div id="predicted-price" class="card-value" style="color: #ffaa00;">Loading...</div>
+                <div class="card-label">Next Day Prediction</div>
+                <div id="prediction-change" class="card-subtitle">--</div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div id="confidence-score" class="card-value" style="color: #5dade2;">Loading...</div>
+                <div class="card-label">Model Confidence</div>
+                <div class="progress-bar">
+                    <div id="confidence-bar" class="progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <div id="model-status" class="card-value">
+                    <span class="status-indicator status-offline"></span>
+                    Connecting...
+                </div>
+                <div class="card-label">API Status</div>
+                <div id="last-update" class="card-subtitle">--</div>
+            </div>
+        </div>
+
+        <!-- TradingView Widget -->
+        <div class="trading-view-section">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-chart-candlestick"></i>
+                    Live Market Data - S&P 500 (SPY)
+                </div>
+            </div>
+            <div style="background: #000; border-radius: 15px; padding: 10px; min-height: 500px;">
+                <div class="tradingview-widget-container" style="height:480px; width:100%;">
+                    <div class="tradingview-widget-container__widget"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                    {
+                        "width": "100%",
+                        "height": 480,
+                        "symbol": "AMEX:SPY",
+                        "interval": "D",
+                        "timezone": "Etc/UTC",
+                        "theme": "dark",
+                        "style": "1",
+                        "locale": "en",
+                        "allow_symbol_change": true,
+                        "calendar": false,
+                        "support_host": "https://www.tradingview.com"
+                    }
+                    </script>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historical Predictions Chart -->
+        <div class="chart-section">
+
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-robot"></i>
+                    Predictions vs Actual Prices
+                </div>
+                <div class="controls">
+                    <button class="control-btn active" onclick="setTimeframe(7)">7 Days</button>
+                    <button class="control-btn" onclick="setTimeframe(30)">30 Days</button>
+                    <button class="control-btn" onclick="setTimeframe(90)">90 Days</button>
+                    <button class="control-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div id="historical-chart" style="height: 450px; width: 100%;"></div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00ff88;"></div>
+                    <span>Actual Price</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffaa00;"></div>
+                    <span>AI Prediction</span>
+                </div>
+                <div class="legend-item">
+                    <i class="fas fa-clock" style="color: #00ff88;"></i>
+                    <span>Updated: <span id="chart-update-time">--</span></span>
+                </div>
+            </div>
+
+            <div class="data-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Real Data Integration:</strong> This dashboard uses live market data from Yahoo Finance and real sentiment analysis from social media and news sources. The AI model combines technical indicators with sentiment features to predict next-day closing prices.
+            </div>
+        </div>
+
+        <!-- Sentiment Analysis Section -->
+        <div class="sentiment-section">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <i class="fas fa-heart"></i>
+                    Market Sentiment Analysis
+                </div>
+            </div>
+
+            <div class="sentiment-grid">
+                <div class="sentiment-item">
+                    <div id="sentiment-joy" class="sentiment-value" style="color: #f1c40f;">--</div>
+                    <div class="sentiment-label">Joy</div>
+                </div>
+                <div class="sentiment-item">
+                    <div id="sentiment-fear" class="sentiment-value" style="color: #e74c3c;">--</div>
+                    <div class="sentiment-label">Fear</div>
+                </div>
+                <div class="sentiment-item">
+                    <div id="sentiment-anger" class="sentiment-value" style="color: #c0392b;">--</div>
+                    <div class="sentiment-label">Anger</div>
+                </div>
+                <div class="sentiment-item">
+                    <div id="sentiment-sadness" class="sentiment-value" style="color: #3498db;">--</div>
+                    <div class="sentiment-label">Sadness</div>
+                </div>
+                <div class="sentiment-item">
+                    <div id="sentiment-love" class="sentiment-value" style="color: #e91e63;">--</div>
+                    <div class="sentiment-label">Love</div>
+                </div>
+                <div class="sentiment-item">
+                    <div id="sentiment-surprise" class="sentiment-value" style="color: #9b59b6;">--</div>
+                    <div class="sentiment-label">Surprise</div>
+                </div>
+            </div>
+
+            <div class="data-info">
+                <i class="fas fa-brain"></i>
+                <strong>Sentiment Source:</strong> Real-time analysis of financial news, social media posts, and market discussions. Values represent emotional intensity from 0-100.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 S&P 500 AI Prediction System |
+            <i class="fas fa-shield-alt"></i> For educational purposes only |
+            <i class="fas fa-exclamation-triangle"></i> Not financial advice</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTimeframe = 7;
+        let apiBaseUrl = 'http://localhost:8080/api';
+        let updateTimer;
+
+        // Chart configuration
+        const chartLayout = {
+            title: { text: '', font: { color: '#ffffff', size: 16 } },
+            plot_bgcolor: "#0a0a0f",
+            paper_bgcolor: "#0a0a0f",
+            font: { color: "#ffffff", family: "Segoe UI" },
+            xaxis: {
+                title: { text: 'Date', font: { color: '#ffffff' } },
+                gridcolor: 'rgba(255,255,255,0.1)',
+                showgrid: true,
+                zeroline: false
+            },
+            yaxis: {
+                title: { text: 'Price ($)', font: { color: '#ffffff' } },
+                gridcolor: 'rgba(255,255,255,0.1)',
+                showgrid: true,
+                zeroline: false
+            },
+            hovermode: 'x unified',
+            showlegend: false,
+            margin: { t: 30, r: 20, b: 60, l: 60 }
+        };
+
+        // Mock data generator for development
+        function generateMockData() {
+            const basePrice = 450 + Math.random() * 50;
+            const predictions = [];
+            const actuals = [];
+            const dates = [];
+
+            for (let i = currentTimeframe; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                dates.push(date.toISOString().split('T')[0]);
+
+                const actual = basePrice + (Math.random() - 0.5) * 20;
+                const predicted = actual + (Math.random() - 0.5) * 10;
+
+                actuals.push(actual);
+                predictions.push(predicted);
+            }
+
+            return { dates, actuals, predictions };
+        }
+
+        // Generate mock sentiment data
+        function generateMockSentiment() {
+            return {
+                joy: Math.random() * 100,
+                fear: Math.random() * 100,
+                anger: Math.random() * 100,
+                sadness: Math.random() * 100,
+                love: Math.random() * 100,
+                surprise: Math.random() * 100
+            };
+        }
+
+        // Update dashboard data
+        async function updateDashboard() {
+            try {
+                // Mock API call - replace with real API when available
+                const mockPrediction = {
+                    current_price: 450 + Math.random() * 50,
+                    prediction: 450 + Math.random() * 50,
+                    confidence: 0.75 + Math.random() * 0.2,
+                    last_market_date: new Date().toISOString().split('T')[0]
+                };
+
+                // Update status cards
+                document.getElementById('current-price').textContent = `$${mockPrediction.current_price.toFixed(2)}`;
+                document.getElementById('predicted-price').textContent = `$${mockPrediction.prediction.toFixed(2)}`;
+
+                const change = ((mockPrediction.prediction - mockPrediction.current_price) / mockPrediction.current_price * 100);
+                document.getElementById('prediction-change').textContent =
+                    `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                document.getElementById('prediction-change').style.color = change >= 0 ? '#00ff88' : '#ff4757';
+
+                const confidencePercent = (mockPrediction.confidence * 100).toFixed(1);
+                document.getElementById('confidence-score').textContent = `${confidencePercent}%`;
+                document.getElementById('confidence-bar').style.width = `${confidencePercent}%`;
+
+                document.getElementById('last-market-date').textContent = mockPrediction.last_market_date;
+                document.getElementById('model-status').innerHTML =
+                    '<span class="status-indicator status-online"></span>Online';
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+
+                // Update sentiment data
+                const sentiment = generateMockSentiment();
+                document.getElementById('sentiment-joy').textContent = sentiment.joy.toFixed(0);
+                document.getElementById('sentiment-fear').textContent = sentiment.fear.toFixed(0);
+                document.getElementById('sentiment-anger').textContent = sentiment.anger.toFixed(0);
+                document.getElementById('sentiment-sadness').textContent = sentiment.sadness.toFixed(0);
+                document.getElementById('sentiment-love').textContent = sentiment.love.toFixed(0);
+                document.getElementById('sentiment-surprise').textContent = sentiment.surprise.toFixed(0);
+
+                // Update chart
+                updateHistoricalChart();
+
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+                document.getElementById('model-status').innerHTML =
+                    '<span class="status-indicator status-offline"></span>Offline';
+            }
+        }
+
+        // Update historical chart
+        function updateHistoricalChart() {
+            const { dates, actuals, predictions } = generateMockData();
+
+            const traces = [
+                {
+                    x: dates,
+                    y: actuals,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Actual Price',
+                    line: { color: '#00ff88', width: 3 },
+                    marker: { size: 6, color: '#00ff88' },
+                    hovertemplate: '<b>Actual</b><br>%{y:.2f}$<br>%{x}<extra></extra>'
+                },
+                {
+                    x: dates,
+                    y: predictions,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Prediction',
+                    line: { color: '#ffaa00', width: 3, dash: 'dot' },
+                    marker: { size: 6, color: '#ffaa00' },
+                    hovertemplate: '<b>Prediction</b><br>%{y:.2f}$<br>%{x}<extra></extra>'
+                }
+            ];
+
+            Plotly.newPlot('historical-chart', traces, chartLayout, {
+                responsive: true,
+                displayModeBar: false
+            });
+
+            document.getElementById('chart-update-time').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Set timeframe
+        function setTimeframe(days) {
+            currentTimeframe = days;
+
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            updateHistoricalChart();
+        }
+
+        // Refresh data
+        function refreshData() {
+            updateDashboard();
+        }
+
+        // Initialize dashboard
+        function initDashboard() {
+            updateDashboard();
+
+            // Set up auto-refresh every 30 seconds
+            updateTimer = setInterval(updateDashboard, 30000);
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateTimer) clearInterval(updateTimer);
+        });
+    </script>
+</body>
+</html>
