@@ -37,4 +37,4 @@ ALPHA_MULTI_TASK_LOSS = 0.7 # Weight for regression loss in multi-task learning
 # --- Enhanced Early Stopping ---
 EARLY_STOPPING_PATIENCE = 20
 EARLY_STOPPING_DELTA = 1e-6
-MODEL_SAVE_PATH = 'optimized_model_20250601_080705.pt'
+MODEL_SAVE_PATH = 'enhanced_transformer_model.pt'

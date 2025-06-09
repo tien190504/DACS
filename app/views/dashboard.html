@@ -681,25 +681,16 @@
             const traces = [
                 {
                     x: dates,
-                    y: actuals,
-                    type: 'scatter',
-                    mode: 'lines+markers',
-                    name: 'Actual Price',
-                    line: { color: '#00ff88', width: 3 },
-                    marker: { size: 6, color: '#00ff88' },
-                    hovertemplate: '<b>Actual</b><br>%{y:.2f}$<br>%{x}<extra></extra>'
-                },
-                {
-                    x: dates,
                     y: predictions,
                     type: 'scatter',
                     mode: 'lines+markers',
-                    name: 'Prediction',
+                    name: 'AI Prediction',
                     line: { color: '#ffaa00', width: 3, dash: 'dot' },
                     marker: { size: 6, color: '#ffaa00' },
                     hovertemplate: '<b>Prediction</b><br>%{y:.2f}$<br>%{x}<extra></extra>'
                 }
             ];
+
 
             Plotly.newPlot('historical-chart', traces, chartLayout, {
                 responsive: true,
@@ -732,7 +723,7 @@
             updateDashboard();
 
             // Set up auto-refresh every 30 seconds
-            updateTimer = setInterval(updateDashboard, 30000);
+<!--            updateTimer = setInterval(updateDashboard, 30000);-->
         }
 
         // Start when page loads
