@@ -630,12 +630,26 @@
         async function updateDashboard() {
             try {
                 // Mock API call - replace with real API when available
-                const mockPrediction = {
-                    current_price: 450 + Math.random() * 50,
-                    prediction: 450 + Math.random() * 50,
-                    confidence: 0.75 + Math.random() * 0.2,
-                    last_market_date: new Date().toISOString().split('T')[0]
-                };
+                const response = await fetch('http://localhost:5000/api/realtime_predict');
+const data = await response.json();
+
+document.getElementById('current-price').textContent = `$${data.actual_price.toFixed(2)}`;
+document.getElementById('predicted-price').textContent = `$${data.pred.toFixed(2)}`;
+
+const change = ((data.pred - data.actual_price) / data.actual_price * 100);
+document.getElementById('prediction-change').textContent =
+    `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+document.getElementById('prediction-change').style.color = change >= 0 ? '#00ff88' : '#ff4757';
+
+const confidencePercent = (data.confidence * 100).toFixed(1);
+document.getElementById('confidence-score').textContent = `${confidencePercent}%`;
+document.getElementById('confidence-bar').style.width = `${confidencePercent}%`;
+
+document.getElementById('last-market-date').textContent = data.last_market_date;
+document.getElementById('model-status').innerHTML =
+    '<span class="status-indicator status-online"></span>Online';
+document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+
 
                 // Update status cards
                 document.getElementById('current-price').textContent = `$${mockPrediction.current_price.toFixed(2)}`;
